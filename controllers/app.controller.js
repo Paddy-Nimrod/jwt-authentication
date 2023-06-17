@@ -15,10 +15,20 @@ exports.getPremiumContent = (req, res) => {
 exports.registerUser = async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+
+  if (password !== confirmPassword) {
+    return res.status(204).send({ message: "password to not match" });
+  }
 
   try {
     const result = await sequelize.transaction(async (transaction) => {
       await bcrypt.hash(password, 10, (err, hash) => {
+        if (err) {
+          return res
+            .status(500)
+            .send({ message: "internal server error", err });
+        }
         User.create({ email: email, password: hash });
       });
       res.status(200).send({ message: "Registration ok" });
